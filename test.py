@@ -5,6 +5,7 @@ import json
 import unittest
 from worker import insert_event
 
+
 @unittest.skip
 def test_trigger(event, context):
     for data in event["Records"]:

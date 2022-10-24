@@ -20,7 +20,7 @@ def insert_event(event, context):
     order_list = []
     for data in event["Records"]:
         try:
-            event_data = data["body"]
+            event_data = json.loads(data["body"])
             event, order = dict_to_model(event_data)
             event_list.append(event)
             if order is not None:

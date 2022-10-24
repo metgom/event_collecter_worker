@@ -30,6 +30,8 @@ def insert_event(event, context):
                     order_list.update({order.order_id: order})
         except KeyError as e:
             # failed work - return SQS
+            print("failed - key error")
+            print(e)
             return {"batchItemFailures": message_id_list}
 
     db_session = database.get_db_session()
@@ -44,6 +46,8 @@ def insert_event(event, context):
     except SQLAlchemyError as e:
         db_session.rollback()
         # failed work - return SQS
+        print("failed - db")
+        print(e)
         return {"batchItemFailures": message_id_list}
     finally:
         db_session.close()

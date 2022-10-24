@@ -6,9 +6,9 @@ from db.model import EventTable, OrderTable
 
 
 def dict_to_model(event_data: dict) -> Tuple[EventTable, Union[OrderTable, None]]:
-    event = EventTable(**event_data)
     order = None
     order_data = event_data.pop("parameters", None)
+    event = EventTable(**event_data)
     if order_data is not None:
         order_data.update({"event_id": event.event_id})
         order = OrderTable(**order_data)

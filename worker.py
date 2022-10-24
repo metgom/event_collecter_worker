@@ -6,28 +6,26 @@ from db.model import EventTable, OrderTable
 
 
 def dict_to_model(event_data: dict) -> Tuple[EventTable, Union[OrderTable, None]]:
+    event = EventTable(**event_data)
     order = None
     order_data = event_data.pop("parameters", None)
     if order_data is not None:
+        order_data.update({"event_id": event.event_id})
         order = OrderTable(**order_data)
-    event = EventTable(**event_data)
     return event, order
 
 
 def insert_event(event, context):
     message_id_list = []
     event_list = []
-    order_list = {}
+    order_list = []
     for data in event["Records"]:
         try:
             event_data = json.loads(data["body"])
             event, order = dict_to_model(event_data)
             event_list.append(event)
             if order is not None:
-                event.order_id = order.order_id
-                # event many : order one.
-                if order.order_id not in order_list.keys():
-                    order_list.update({order.order_id: order})
+                order_list.append(order)
         except KeyError as e:
             # failed work - return SQS
             print("failed - key error")
@@ -38,7 +36,7 @@ def insert_event(event, context):
 
     db_session.add_all(event_list)
     if len(order_list) > 0:
-        db_session.add_all(list(order_list.values()))
+        db_session.add_all(order_list)
 
     try:
         db_session.flush()

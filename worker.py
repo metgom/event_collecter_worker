@@ -17,7 +17,7 @@ def dict_to_model(event_data: dict) -> Tuple[EventTable, Union[OrderTable, None]
 def insert_event(event, context):
     message_id_list = []
     event_list = []
-    order_list = []
+    order_list = {}
     for data in event["Records"]:
         try:
             event_data = json.loads(data["body"])
@@ -25,7 +25,9 @@ def insert_event(event, context):
             event_list.append(event)
             if order is not None:
                 event.order_id = order.order_id
-                order_list.append(order)
+                # event many : order one.
+                if order.order_id not in order_list.keys():
+                    order_list.update({order.order_id: order})
         except KeyError as e:
             # failed work - return SQS
             return {"batchItemFailures": message_id_list}
@@ -34,7 +36,7 @@ def insert_event(event, context):
 
     db_session.add_all(event_list)
     if len(order_list) > 0:
-        db_session.add_all(order_list)
+        db_session.add_all(list(order_list.values()))
 
     try:
         db_session.flush()
